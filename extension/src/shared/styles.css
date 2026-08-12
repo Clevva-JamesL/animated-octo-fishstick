@@ -5,6 +5,7 @@
   --muted: #a89bb8;
   --accent: #9146ff;
   --error: #ff6b6b;
+  --ok: #6bcb77;
   --pad: 12px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -30,6 +31,11 @@ h1 {
   font-size: 1.1rem;
 }
 
+h2 {
+  margin: 16px 0 8px;
+  font-size: 0.95rem;
+}
+
 p {
   margin: 0 0 12px;
   color: var(--muted);
@@ -38,6 +44,7 @@ p {
 }
 
 #status {
+  margin-bottom: 12px;
   font-size: 0.85rem;
   color: var(--muted);
 }
@@ -47,12 +54,120 @@ p {
 }
 
 #status[data-state='ok'] {
-  color: var(--fg);
+  color: var(--ok);
 }
 
 .meta {
   margin-top: 16px;
   font-size: 0.75rem;
   color: var(--muted);
-  word-break: break-all;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0 16px;
+}
+
+.count {
+  text-align: center;
+  padding: 10px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.count-value {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.count-label {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--fg);
+  font: inherit;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+button {
+  appearance: none;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--fg);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.1rem;
+  padding: 14px 12px;
+}
+
+button.danger {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ffb4b4;
+}
+
+.deaths ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.deaths li {
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.85rem;
+}
+
+.deaths li .when {
+  color: var(--muted);
+  font-size: 0.75rem;
 }

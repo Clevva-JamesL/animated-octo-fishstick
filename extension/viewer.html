@@ -9,9 +9,28 @@
   <body>
     <main>
       <h1>Death Counter</h1>
-      <p>Viewer panel scaffold. Counts and death lists come in the next iteration.</p>
+      <p id="session-label">No active session</p>
       <div id="status">Waiting for Twitch authorization…</div>
-      <div id="meta" class="meta"></div>
+
+      <section class="counts" aria-label="Death counts">
+        <div class="count">
+          <span class="count-value" id="count-stream">0</span>
+          <span class="count-label">Stream</span>
+        </div>
+        <div class="count">
+          <span class="count-value" id="count-game">0</span>
+          <span class="count-label">Game</span>
+        </div>
+        <div class="count">
+          <span class="count-value" id="count-run">0</span>
+          <span class="count-label">Run</span>
+        </div>
+      </section>
+
+      <section class="deaths">
+        <h2>Recent deaths</h2>
+        <ul id="death-list"></ul>
+      </section>
     </main>
     <script type="module" src="/src/viewer/main.ts"></script>
   </body>

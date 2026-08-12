@@ -18,8 +18,14 @@ interface TwitchExtAuthorized {
 
 interface TwitchExt {
   onAuthorized: (callback: (auth: TwitchExtAuthorized) => void) => void
-  listen: (target: string, callback: (target: string, contentType: string, message: string) => void) => void
-  unlisten: (target: string, callback: (target: string, contentType: string, message: string) => void) => void
+  listen: (
+    target: string,
+    callback: (target: string, contentType: string, message: string) => void,
+  ) => void
+  unlisten: (
+    target: string,
+    callback: (target: string, contentType: string, message: string) => void,
+  ) => void
 }
 
 interface Window {

@@ -9,9 +9,32 @@
   <body>
     <main>
       <h1>Live Controls</h1>
-      <p>Live config scaffold. +1 death and clip linking come next.</p>
       <div id="status">Waiting for Twitch authorization…</div>
-      <div id="meta" class="meta"></div>
+
+      <section class="counts" aria-label="Death counts">
+        <div class="count">
+          <span class="count-value" id="count-stream">0</span>
+          <span class="count-label">Stream</span>
+        </div>
+        <div class="count">
+          <span class="count-value" id="count-game">0</span>
+          <span class="count-label">Game</span>
+        </div>
+        <div class="count">
+          <span class="count-value" id="count-run">0</span>
+          <span class="count-label">Run</span>
+        </div>
+      </section>
+
+      <div class="stack">
+        <label>
+          Note (optional)
+          <input id="note" type="text" maxlength="500" placeholder="Boss / cause of death" />
+        </label>
+        <button type="button" id="plus-one" class="primary" disabled>+1 Death</button>
+      </div>
+
+      <p id="last-death" class="meta">No deaths yet</p>
     </main>
     <script type="module" src="/src/live_config/main.ts"></script>
   </body>

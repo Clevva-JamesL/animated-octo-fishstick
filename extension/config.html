@@ -9,9 +9,25 @@
   <body>
     <main>
       <h1>Death Counter Setup</h1>
-      <p>Broadcaster config scaffold. Session / game / run controls come next.</p>
       <div id="status">Waiting for Twitch authorization…</div>
-      <div id="meta" class="meta"></div>
+
+      <form id="session-form" class="stack">
+        <label>
+          Game
+          <input id="game" name="game" type="text" maxlength="120" placeholder="e.g. Elden Ring" />
+        </label>
+        <label>
+          Run
+          <input id="run" name="run" type="text" maxlength="120" placeholder="Optional run / attempt" />
+        </label>
+        <div class="actions">
+          <button type="submit" id="start-btn">Start session</button>
+          <button type="button" id="save-btn" disabled>Update current</button>
+          <button type="button" id="end-btn" class="danger" disabled>End session</button>
+        </div>
+      </form>
+
+      <p id="session-summary" class="meta">No active session</p>
     </main>
     <script type="module" src="/src/config/main.ts"></script>
   </body>
