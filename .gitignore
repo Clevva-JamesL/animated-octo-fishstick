@@ -1,0 +1,22 @@
+.DS_Store
+.idea/
+.vscode/
+*.log
+
+# Local env
+.env
+.env.local
+
+# Backend
+backend/vendor/
+backend/node_modules/
+backend/.env
+backend/storage/logs/*
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+
+# Extension
+extension/node_modules/
+extension/dist/
+extension/.env
