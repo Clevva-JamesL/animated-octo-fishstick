@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Ext;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\DeathResource;
+use App\Http\Resources\StreamSessionResource;
+use App\Support\TwitchContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -10,15 +13,28 @@ class StateController extends Controller
 {
     public function __invoke(Request $request): JsonResponse
     {
-        /** @var array{channel_id:?string,user_id:?string,opaque_user_id:?string,role:?string,is_unlinked:bool,dev:bool} $twitch */
-        $twitch = $request->attributes->get('twitch', []);
+        $channel = TwitchContext::channel($request);
+        $session = TwitchContext::currentSession($channel);
+        $counts = TwitchContext::counts($channel, $session);
+
+        $recentDeaths = $channel->deaths()
+            ->when($session, fn ($query) => $query->where('stream_session_id', $session->id))
+            ->latest('died_at')
+            ->limit(25)
+            ->get();
 
         return response()->json([
             'ok' => true,
-            'channel_id' => $twitch['channel_id'] ?? null,
-            'role' => $twitch['role'] ?? null,
-            'user_id' => $twitch['user_id'] ?? $twitch['opaque_user_id'] ?? null,
-            'message' => 'Extension backend is reachable. Domain models come next.',
+            'channel' => [
+                'id' => $channel->id,
+                'twitch_user_id' => $channel->twitch_user_id,
+                'allow_viewer_clips' => $channel->allow_viewer_clips,
+            ],
+            'role' => TwitchContext::role($request),
+            'user_id' => TwitchContext::actorId($request),
+            'session' => $session ? new StreamSessionResource($session) : null,
+            'counts' => $counts,
+            'recent_deaths' => DeathResource::collection($recentDeaths),
         ]);
     }
 }
