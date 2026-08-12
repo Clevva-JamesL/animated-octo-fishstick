@@ -74,6 +74,19 @@ Asset paths use `base: './'` so builds work on Twitch’s CDN path layout.
 
 ## Current iteration
 
-**Iteration 0 (scaffold):** Laravel API + JWT middleware stub + `/api/ext/state`, Vite multi-page shells, Supabase-ready `.env`, ngrok-friendly CORS/proxies.
+**Iteration 1 (core counters):** Channel / StreamSession / Death models on Supabase; start/update/end session; +1 death; panel + config + live config UIs; PubSub broadcast on writes (when Twitch credentials are set).
 
-Next: Channel / StreamSession / Death models and counter API.
+### Quick API test (local dev auth)
+
+```bash
+cd backend && php artisan serve
+# another terminal:
+curl -s http://127.0.0.1:8000/api/ext/state \
+  -H 'Authorization: Bearer dev' \
+  -H 'X-Twitch-Dev-Channel: 12345' \
+  -H 'X-Twitch-Dev-Role: broadcaster'
+```
+
+Browser UI without Twitch Helper: open Vite pages with `?dev=1&channel=12345`.
+
+Next: clip linking + expandable category lists.
