@@ -17,7 +17,9 @@ return [
         '#^https://localhost(:\\d+)?$#',
         '#^http://localhost(:\\d+)?$#',
         '#^https://[\\w.-]+\\.ngrok-free\\.app$#',
+        '#^https://[\\w.-]+\\.ngrok-free\\.dev$#',
         '#^https://[\\w.-]+\\.ngrok\\.io$#',
+        '#^https://[\\w.-]+\\.trycloudflare\\.com$#',
     ],
 
     'allowed_headers' => ['*'],

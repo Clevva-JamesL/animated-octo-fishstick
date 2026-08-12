@@ -18,5 +18,25 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    // ngrok dials 127.0.0.1; Vite otherwise binds IPv6-only (::1) on macOS.
+    host: '127.0.0.1',
+    // Allow tunnel Host headers (Vite blocks unknown hosts by default).
+    allowedHosts: [
+      '.ngrok-free.dev',
+      '.ngrok-free.app',
+      '.ngrok.io',
+      '.trycloudflare.com',
+    ],
+    // Free ngrok = one domain. Proxy API so one tunnel covers Vite + Laravel.
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/up': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+    },
   },
 })
