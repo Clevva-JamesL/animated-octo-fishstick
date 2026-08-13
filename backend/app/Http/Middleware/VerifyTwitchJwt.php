@@ -43,7 +43,11 @@ class VerifyTwitchJwt
 
         try {
             $decoded = JWT::decode($token, new Key(base64_decode($secret, true) ?: $secret, 'HS256'));
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            if (app()->environment('local')) {
+                report($exception);
+            }
+
             return response()->json(['message' => 'Invalid Twitch extension token.'], 401);
         }
 
