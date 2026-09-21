@@ -15,4 +15,7 @@ Route::middleware(VerifyTwitchJwt::class)->prefix('ext')->group(function () {
 
     Route::post('/deaths', [DeathController::class, 'store']);
     Route::patch('/deaths/{death}', [DeathController::class, 'update']);
+    Route::delete('/deaths/{death}', [DeathController::class, 'destroy']);
+    Route::post('/deaths/{death}/clip', [DeathController::class, 'attachClip']);
+    Route::delete('/deaths/{death}/clip', [DeathController::class, 'detachClip']);
 });

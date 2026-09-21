@@ -1,7 +1,17 @@
 import '../shared/styles.css'
-import { createDeath, fetchExtState, type AuthContext, type ExtState } from '../shared/api'
+import {
+  attachClip,
+  createDeath,
+  deleteDeath,
+  detachClip,
+  fetchExtState,
+  updateDeath,
+  type AuthContext,
+  type Death,
+  type ExtState,
+} from '../shared/api'
 import { listenBroadcast, resolveAuthToken, setStatus } from '../shared/twitch'
-import { applyStateCounts, sessionLabel } from '../shared/ui'
+import { applyStateCounts, deathsFor, sessionLabel, setButtonBusy } from '../shared/ui'
 
 function requireEl<T extends HTMLElement>(selector: string): T {
   const el = document.querySelector<T>(selector)
@@ -14,29 +24,67 @@ function requireEl<T extends HTMLElement>(selector: string): T {
 const statusEl = requireEl<HTMLElement>('#status')
 const noteInput = requireEl<HTMLInputElement>('#note')
 const plusOneBtn = requireEl<HTMLButtonElement>('#plus-one')
-const lastDeathEl = requireEl<HTMLElement>('#last-death')
+const lastCard = requireEl<HTMLElement>('#last-death-card')
+const lastWhen = requireEl<HTMLElement>('#last-death-when')
+const lastNote = requireEl<HTMLInputElement>('#last-note')
+const lastClip = requireEl<HTMLInputElement>('#last-clip')
+const saveLastBtn = requireEl<HTMLButtonElement>('#save-last')
+const undoLastBtn = requireEl<HTMLButtonElement>('#undo-last')
+const lastEmpty = requireEl<HTMLElement>('#last-death-empty')
 
 let auth: AuthContext = { token: '' }
+let sessionActive = false
+let latest: Death | null = null
+let lastPaintedId: number | null = null
+let dirty = false
+let mutating = false
 
-function paint(state: ExtState): void {
-  applyStateCounts(state)
-  plusOneBtn.disabled = !state.session
+function paintLastDeath(state: ExtState): void {
+  const next = deathsFor(state, 'stream')[0] ?? null
+  latest = next
 
-  const latest = state.recent_deaths[0]
-  if (latest) {
-    const when = latest.died_at ? new Date(latest.died_at).toLocaleTimeString() : '—'
-    lastDeathEl.textContent = `Last: ${latest.note?.trim() || 'Death'} · ${when}`
-  } else {
-    lastDeathEl.textContent = state.session
+  if (!next) {
+    lastCard.hidden = true
+    lastEmpty.hidden = false
+    lastEmpty.textContent = state.session
       ? `Active: ${sessionLabel(state.session)} · No deaths yet`
       : 'Start a session in Config first'
+    lastPaintedId = null
+    dirty = false
+    return
+  }
+
+  lastCard.hidden = false
+  lastEmpty.hidden = true
+  lastWhen.textContent = next.died_at
+    ? new Date(next.died_at).toLocaleTimeString()
+    : '—'
+
+  if ((mutating || dirty) && next.id === lastPaintedId) {
+    return
+  }
+
+  lastNote.value = next.note ?? ''
+  lastClip.value = next.clip_url ?? ''
+  lastPaintedId = next.id
+  dirty = false
+}
+
+function paint(state: ExtState): void {
+  sessionActive = Boolean(state.session)
+  applyStateCounts(state)
+  paintLastDeath(state)
+  if (!mutating) {
+    plusOneBtn.disabled = !sessionActive
   }
 }
 
 async function refresh(): Promise<void> {
   const state = await fetchExtState(auth)
   paint(state)
-  setStatus(statusEl, state.session ? 'Ready' : 'No active session')
+  if (!mutating) {
+    setStatus(statusEl, state.session ? 'Ready' : 'No active session')
+  }
 }
 
 async function boot(): Promise<void> {
@@ -49,7 +97,7 @@ async function boot(): Promise<void> {
       role: 'broadcaster',
     }
 
-    setStatus(statusEl, 'Loading…')
+    setStatus(statusEl, 'Loading…', 'loading')
     await refresh()
 
     listenBroadcast(() => {
@@ -61,19 +109,106 @@ async function boot(): Promise<void> {
   }
 }
 
+lastNote.addEventListener('input', () => {
+  dirty = true
+})
+lastClip.addEventListener('input', () => {
+  dirty = true
+})
+
 plusOneBtn.addEventListener('click', () => {
+  if (mutating || !sessionActive) {
+    return
+  }
   void (async () => {
+    mutating = true
+    setButtonBusy(plusOneBtn, true)
+    saveLastBtn.disabled = true
+    undoLastBtn.disabled = true
     try {
-      plusOneBtn.disabled = true
       const note = noteInput.value.trim()
       await createDeath(auth, note ? { note } : {})
       noteInput.value = ''
+      dirty = false
       await refresh()
-      setStatus(statusEl, 'Death recorded')
+      setStatus(statusEl, 'Death recorded', 'ok')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       setStatus(statusEl, message, true)
-      plusOneBtn.disabled = false
+    } finally {
+      mutating = false
+      setButtonBusy(plusOneBtn, false)
+      plusOneBtn.disabled = !sessionActive
+      saveLastBtn.disabled = !latest
+      undoLastBtn.disabled = !latest
+    }
+  })()
+})
+
+saveLastBtn.addEventListener('click', () => {
+  if (!latest || mutating) {
+    return
+  }
+  void (async () => {
+    if (!latest) {
+      return
+    }
+    const deathId = latest.id
+    mutating = true
+    setButtonBusy(saveLastBtn, true)
+    undoLastBtn.disabled = true
+    plusOneBtn.disabled = true
+    try {
+      const note = lastNote.value.trim() || null
+      const clip = lastClip.value.trim()
+      await updateDeath(auth, deathId, { note })
+      if (clip === '') {
+        if (latest.clip_url) {
+          await detachClip(auth, deathId)
+        }
+      } else if (clip !== (latest.clip_url ?? '')) {
+        await attachClip(auth, deathId, clip)
+      }
+      dirty = false
+      await refresh()
+      setStatus(statusEl, 'Death updated', 'ok')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setStatus(statusEl, message, true)
+    } finally {
+      mutating = false
+      setButtonBusy(saveLastBtn, false)
+      undoLastBtn.disabled = !latest
+      plusOneBtn.disabled = !sessionActive
+    }
+  })()
+})
+
+undoLastBtn.addEventListener('click', () => {
+  if (!latest || mutating) {
+    return
+  }
+  void (async () => {
+    if (!latest) {
+      return
+    }
+    mutating = true
+    setButtonBusy(undoLastBtn, true)
+    saveLastBtn.disabled = true
+    plusOneBtn.disabled = true
+    try {
+      await deleteDeath(auth, latest.id)
+      dirty = false
+      await refresh()
+      setStatus(statusEl, 'Death undone', 'ok')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      setStatus(statusEl, message, true)
+    } finally {
+      mutating = false
+      setButtonBusy(undoLastBtn, false)
+      saveLastBtn.disabled = !latest
+      plusOneBtn.disabled = !sessionActive
     }
   })()
 })

@@ -9,21 +9,49 @@
   <body>
     <main>
       <h1>Death Counter Setup</h1>
-      <div id="status">Waiting for Twitch authorization…</div>
+      <div id="status" data-state="loading" aria-busy="true">Waiting for Twitch authorization…</div>
 
       <form id="session-form" class="stack">
         <label>
           Game
-          <input id="game" name="game" type="text" maxlength="120" placeholder="e.g. Elden Ring" />
+          <div class="combobox">
+            <div id="game-selected" class="combobox-selected" hidden>
+              <img class="combobox-art" alt="" hidden />
+              <span class="combobox-name"></span>
+              <button type="button" class="combobox-clear" aria-label="Clear game">Clear</button>
+            </div>
+            <input
+              id="game"
+              name="game"
+              type="text"
+              maxlength="120"
+              placeholder="Search Twitch games"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="game-list"
+              aria-autocomplete="list"
+            />
+            <ul id="game-list" class="combobox-list" hidden role="listbox"></ul>
+          </div>
         </label>
         <label>
           Run
           <input id="run" name="run" type="text" maxlength="120" placeholder="Optional run / attempt" />
         </label>
         <div class="actions">
-          <button type="submit" id="start-btn">Start session</button>
-          <button type="button" id="save-btn" disabled>Update current</button>
-          <button type="button" id="end-btn" class="danger" disabled>End session</button>
+          <button type="submit" id="start-btn" disabled>
+            <span class="btn-spinner" aria-hidden="true"></span>
+            <span data-label>Start session</span>
+          </button>
+          <button type="button" id="save-btn" disabled>
+            <span class="btn-spinner" aria-hidden="true"></span>
+            Update current
+          </button>
+          <button type="button" id="end-btn" class="danger" disabled>
+            <span class="btn-spinner" aria-hidden="true"></span>
+            End session
+          </button>
         </div>
       </form>
 

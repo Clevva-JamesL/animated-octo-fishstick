@@ -9,7 +9,7 @@
   <body>
     <main>
       <h1>Live Controls</h1>
-      <div id="status">Waiting for Twitch authorization…</div>
+      <div id="status" data-state="loading" aria-busy="true">Waiting for Twitch authorization…</div>
 
       <section class="counts" aria-label="Death counts">
         <div class="count">
@@ -31,10 +31,43 @@
           Note (optional)
           <input id="note" type="text" maxlength="500" placeholder="Boss / cause of death" />
         </label>
-        <button type="button" id="plus-one" class="primary" disabled>+1 Death</button>
+        <button type="button" id="plus-one" class="primary" disabled>
+          <span class="btn-spinner" aria-hidden="true"></span>
+          +1 Death
+        </button>
       </div>
 
-      <p id="last-death" class="meta">No deaths yet</p>
+      <section id="last-death-card" class="last-death" hidden>
+        <h2>Last death</h2>
+        <p id="last-death-when" class="meta">—</p>
+        <div class="stack">
+          <label>
+            Note
+            <input id="last-note" type="text" maxlength="500" />
+          </label>
+          <label>
+            Clip URL
+            <input
+              id="last-clip"
+              type="text"
+              maxlength="512"
+              placeholder="https://clips.twitch.tv/…"
+            />
+          </label>
+          <div class="actions">
+            <button type="button" id="save-last">
+              <span class="btn-spinner" aria-hidden="true"></span>
+              Save
+            </button>
+            <button type="button" id="undo-last" class="danger">
+              <span class="btn-spinner" aria-hidden="true"></span>
+              Undo
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <p id="last-death-empty" class="meta" hidden></p>
     </main>
     <script type="module" src="/src/live_config/main.ts"></script>
   </body>

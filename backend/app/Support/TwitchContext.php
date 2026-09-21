@@ -92,17 +92,17 @@ class TwitchContext
             ->where('stream_session_id', $session->id)
             ->count();
 
-        $game = $session->game
+        $game = $session->game_id
             ? Death::query()
                 ->where('channel_id', $channel->id)
-                ->where('game', $session->game)
+                ->where('game_id', $session->game_id)
                 ->count()
             : $stream;
 
-        $run = ($session->game && $session->run)
+        $run = ($session->game_id && $session->run)
             ? Death::query()
                 ->where('channel_id', $channel->id)
-                ->where('game', $session->game)
+                ->where('game_id', $session->game_id)
                 ->where('run', $session->run)
                 ->count()
             : $stream;

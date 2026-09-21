@@ -10,6 +10,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         viewer: resolve(__dirname, 'viewer.html'),
+        overlay: resolve(__dirname, 'overlay.html'),
         config: resolve(__dirname, 'config.html'),
         live_config: resolve(__dirname, 'live_config.html'),
       },

@@ -10,7 +10,7 @@
     <main>
       <h1>Death Counter</h1>
       <p id="session-label">No active session</p>
-      <div id="status">Waiting for Twitch authorization…</div>
+      <div id="status" data-state="loading" aria-busy="true">Waiting for Twitch authorization…</div>
 
       <section class="counts" aria-label="Death counts">
         <div class="count">
@@ -27,9 +27,28 @@
         </div>
       </section>
 
-      <section class="deaths">
-        <h2>Recent deaths</h2>
-        <ul id="death-list"></ul>
+      <section class="deaths" aria-label="Deaths by category">
+        <details class="death-group" id="group-stream" open>
+          <summary>
+            <span class="death-group-name">Stream</span>
+            <span class="death-group-count" id="count-list-stream">0</span>
+          </summary>
+          <ul id="death-list-stream"></ul>
+        </details>
+        <details class="death-group" id="group-game">
+          <summary>
+            <span class="death-group-name">Game</span>
+            <span class="death-group-count" id="count-list-game">0</span>
+          </summary>
+          <ul id="death-list-game"></ul>
+        </details>
+        <details class="death-group" id="group-run">
+          <summary>
+            <span class="death-group-name">Run</span>
+            <span class="death-group-count" id="count-list-run">0</span>
+          </summary>
+          <ul id="death-list-run"></ul>
+        </details>
       </section>
     </main>
     <script type="module" src="/src/viewer/main.ts"></script>

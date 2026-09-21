@@ -8,8 +8,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class StreamSession extends Model
 {
+    protected $with = [
+        'catalogGame',
+    ];
+
     protected $fillable = [
         'channel_id',
+        'game_id',
         'game',
         'run',
         'started_at',
@@ -27,6 +32,11 @@ class StreamSession extends Model
     public function channel(): BelongsTo
     {
         return $this->belongsTo(Channel::class);
+    }
+
+    public function catalogGame(): BelongsTo
+    {
+        return $this->belongsTo(Game::class, 'game_id');
     }
 
     public function deaths(): HasMany

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Death Counter Overlay</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+  </head>
+  <body>
+    <div id="overlay" class="overlay" data-loading="true" aria-busy="true" aria-label="Death counter overlay">
+      <p id="session-label" class="session-label" hidden></p>
+      <div class="counts" aria-label="Death counts">
+        <div class="count">
+          <span class="count-value" id="count-stream">0</span>
+          <span class="count-label">Stream</span>
+        </div>
+        <div class="count">
+          <span class="count-value" id="count-run">0</span>
+          <span class="count-label">Run</span>
+        </div>
+      </div>
+      <p id="status" class="status" data-state="loading">Loading</p>
+    </div>
+    <script type="module" src="/src/overlay/main.ts"></script>
+  </body>
+</html>

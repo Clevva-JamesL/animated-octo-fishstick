@@ -18,6 +18,7 @@ interface TwitchExtAuthorized {
 
 interface TwitchExt {
   onAuthorized: (callback: (auth: TwitchExtAuthorized) => void) => void
+  onContext: (callback: (context: TwitchExtContext, delta: string[]) => void) => void
   listen: (
     target: string,
     callback: (target: string, contentType: string, message: string) => void,
@@ -26,6 +27,10 @@ interface TwitchExt {
     target: string,
     callback: (target: string, contentType: string, message: string) => void,
   ) => void
+}
+
+interface TwitchExtContext {
+  game?: string
 }
 
 interface Window {

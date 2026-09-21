@@ -10,6 +10,7 @@ class Death extends Model
     protected $fillable = [
         'channel_id',
         'stream_session_id',
+        'game_id',
         'game',
         'run',
         'note',
@@ -36,5 +37,10 @@ class Death extends Model
     public function streamSession(): BelongsTo
     {
         return $this->belongsTo(StreamSession::class);
+    }
+
+    public function catalogGame(): BelongsTo
+    {
+        return $this->belongsTo(Game::class, 'game_id');
     }
 }

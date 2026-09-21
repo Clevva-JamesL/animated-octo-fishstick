@@ -1,0 +1,14 @@
+---
+description: Visual UI must follow docs/design.md (colour, type, motion, overlay HUD)
+globs: extension/**/*.{html,css,ts}
+alwaysApply: false
+---
+
+# Visual design
+
+When changing appearance, layout, colour, type, or motion of extension UI, follow [docs/design.md](docs/design.md).
+
+- Use existing colour and spacing tokens. Do not add one-off hex, font stacks, or animation timings.
+- If a visual choice is not in that doc, add it there first, then implement.
+- Overlay stays transparent, non-interactive, top-right, Stream + Run only.
+- Respect `prefers-reduced-motion` for any new animation.

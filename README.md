@@ -2,10 +2,12 @@
 
 Twitch Extension death counter — Laravel EBS + Vite extension frontend + Supabase Postgres.
 
+**Using the extension on your channel?** See the [streamer guide](docs/streamer-guide.md).
+
 ## Layout
 
 - `backend/` — Laravel API (Extension Backend Service)
-- `extension/` — Panel / Config / Live Config (Vite multi-page)
+- `extension/` — Video Overlay / Config / Live Config (Vite multi-page; panel viewer optional)
 
 ## Prerequisites
 
@@ -19,7 +21,7 @@ Twitch Extension death counter — Laravel EBS + Vite extension frontend + Supab
 ```bash
 cd backend
 cp .env.example .env   # if needed; key may already exist
-# Fill DB_* from Supabase → Project Settings → Database
+# Fill DB_* from Supabase → Connect → Session pooler (not the IPv6-only db.* host)
 # Fill TWITCH_EXTENSION_* from Twitch Developer Console
 php artisan serve --host=127.0.0.1 --port=8000
 ```
@@ -64,17 +66,21 @@ npm run build    # outputs extension/dist for Twitch upload / Local Test Base UR
 
 | Field | Value |
 |-------|--------|
-| Panel Viewer Path | `viewer.html` |
+| Video Overlay Path | `overlay.html` |
 | Config Path | `config.html` |
 | Live Config Path | `live_config.html` |
 | Base URI | Vite or static `dist` HTTPS URL (trailing `/`) |
-| Type | Panel (enable Config / Live Config as needed) |
+| Type | Video Overlay (enable Config / Live Config as needed) |
+
+See [docs/overlay.md](docs/overlay.md) for overlay setup, console changes, and testing steps.
+
+Visual colour, type, spacing, and motion: [docs/design.md](docs/design.md). All extension UI must follow that spec.
 
 Asset paths use `base: './'` so builds work on Twitch’s CDN path layout.
 
 ## Current iteration
 
-**Iteration 1 (core counters):** Channel / StreamSession / Death models on Supabase; start/update/end session; +1 death; panel + config + live config UIs; PubSub broadcast on writes (when Twitch credentials are set).
+**Iteration 2 (death record):** Undo last death, edit note, paste a Twitch clip URL in Live Config. Panel expands Stream / Game / Run lists with clip links.
 
 ### Quick API test (local dev auth)
 
@@ -87,6 +93,4 @@ curl -s http://127.0.0.1:8000/api/ext/state \
   -H 'X-Twitch-Dev-Role: broadcaster'
 ```
 
-Browser UI without Twitch Helper: open Vite pages with `?dev=1&channel=12345`.
-
-Next: clip linking + expandable category lists.
+Browser UI without Twitch Helper: open Vite pages with `?dev=1&channel=12345` (e.g. `overlay.html`, `live_config.html`, `viewer.html`).

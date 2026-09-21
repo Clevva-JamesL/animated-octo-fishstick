@@ -6,9 +6,19 @@ export type Counts = {
   run: number
 }
 
+export type CatalogGame = {
+  id: number
+  twitch_id: string | null
+  name: string
+  box_art_url: string | null
+}
+
 export type StreamSession = {
   id: number
+  game_id: number | null
+  twitch_game_id: string | null
   game: string | null
+  box_art_url: string | null
   run: string | null
   started_at: string | null
   ended_at: string | null
@@ -38,7 +48,13 @@ export type ExtState = {
   user_id: string | null
   session: StreamSession | null
   counts: Counts
+  recent_games: CatalogGame[]
   recent_deaths: Death[]
+  deaths: {
+    stream: Death[]
+    game: Death[]
+    run: Death[]
+  }
 }
 
 type ApiOptions = {
@@ -79,14 +95,26 @@ async function apiFetch<T>(path: string, options: ApiOptions): Promise<T> {
   if (!response.ok) {
     let detail = `Request failed (${response.status})`
     try {
-      const payload = (await response.json()) as { message?: string }
-      if (payload.message) {
+      const payload = (await response.json()) as {
+        message?: string
+        errors?: Record<string, string[]>
+      }
+      const firstError = payload.errors
+        ? Object.values(payload.errors).flat()[0]
+        : undefined
+      if (typeof firstError === 'string' && firstError !== '') {
+        detail = firstError
+      } else if (payload.message) {
         detail = payload.message
       }
     } catch {
       // ignore JSON parse errors
     }
     throw new Error(detail)
+  }
+
+  if (response.status === 204) {
+    return undefined as T
   }
 
   return response.json() as Promise<T>
@@ -103,16 +131,23 @@ export async function fetchExtState(auth: AuthContext): Promise<ExtState> {
   return apiFetch<ExtState>('/api/ext/state', auth)
 }
 
+export type SessionPayload = {
+  game?: string | null
+  run?: string | null
+  twitch_game_id?: string | null
+  box_art_url?: string | null
+}
+
 export async function startSession(
   auth: AuthContext,
-  payload: { game?: string; run?: string },
+  payload: SessionPayload,
 ): Promise<{ session: StreamSession; counts: Counts }> {
   return apiFetch('/api/ext/sessions', { ...auth, method: 'POST', body: payload })
 }
 
 export async function updateSession(
   auth: AuthContext,
-  payload: { game?: string | null; run?: string | null },
+  payload: SessionPayload,
 ): Promise<{ session: StreamSession; counts: Counts }> {
   return apiFetch('/api/ext/sessions/current', { ...auth, method: 'PATCH', body: payload })
 }
@@ -128,6 +163,40 @@ export async function createDeath(
   payload: { note?: string } = {},
 ): Promise<{ death: Death; counts: Counts }> {
   return apiFetch('/api/ext/deaths', { ...auth, method: 'POST', body: payload })
+}
+
+export async function updateDeath(
+  auth: AuthContext,
+  deathId: number,
+  payload: { note?: string | null },
+): Promise<{ death: Death; counts: Counts }> {
+  return apiFetch(`/api/ext/deaths/${deathId}`, { ...auth, method: 'PATCH', body: payload })
+}
+
+export async function deleteDeath(
+  auth: AuthContext,
+  deathId: number,
+): Promise<{ counts: Counts }> {
+  return apiFetch(`/api/ext/deaths/${deathId}`, { ...auth, method: 'DELETE' })
+}
+
+export async function attachClip(
+  auth: AuthContext,
+  deathId: number,
+  clipUrl: string,
+): Promise<{ death: Death; counts: Counts }> {
+  return apiFetch(`/api/ext/deaths/${deathId}/clip`, {
+    ...auth,
+    method: 'POST',
+    body: { clip_url: clipUrl },
+  })
+}
+
+export async function detachClip(
+  auth: AuthContext,
+  deathId: number,
+): Promise<{ death: Death; counts: Counts }> {
+  return apiFetch(`/api/ext/deaths/${deathId}/clip`, { ...auth, method: 'DELETE' })
 }
 
 export function getApiBaseUrl(): string {

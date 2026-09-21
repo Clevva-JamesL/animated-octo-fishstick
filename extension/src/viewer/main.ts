@@ -1,7 +1,7 @@
 import '../shared/styles.css'
 import { fetchExtState, type AuthContext, type ExtState } from '../shared/api'
 import { listenBroadcast, resolveAuthToken, setStatus } from '../shared/twitch'
-import { applyStateCounts, renderDeathList, sessionLabel } from '../shared/ui'
+import { applyStateCounts, deathsFor, renderDeathList, sessionLabel } from '../shared/ui'
 
 function requireEl(selector: string): HTMLElement {
   const el = document.querySelector<HTMLElement>(selector)
@@ -13,14 +13,31 @@ function requireEl(selector: string): HTMLElement {
 
 const statusEl = requireEl('#status')
 const sessionLabelEl = requireEl('#session-label')
-const deathListEl = requireEl('#death-list')
+const streamList = requireEl('#death-list-stream')
+const gameList = requireEl('#death-list-game')
+const runList = requireEl('#death-list-run')
+const streamCount = requireEl('#count-list-stream')
+const gameCount = requireEl('#count-list-game')
+const runCount = requireEl('#count-list-run')
 
 let auth: AuthContext = { token: '' }
+
+function paintGroup(
+  listEl: HTMLElement,
+  countEl: HTMLElement,
+  deaths: ReturnType<typeof deathsFor>,
+  total: number,
+): void {
+  countEl.textContent = String(total)
+  renderDeathList(listEl, deaths)
+}
 
 function paint(state: ExtState): void {
   applyStateCounts(state)
   sessionLabelEl.textContent = sessionLabel(state.session)
-  renderDeathList(deathListEl, state.recent_deaths)
+  paintGroup(streamList, streamCount, deathsFor(state, 'stream'), state.counts.stream)
+  paintGroup(gameList, gameCount, deathsFor(state, 'game'), state.counts.game)
+  paintGroup(runList, runCount, deathsFor(state, 'run'), state.counts.run)
 }
 
 async function refresh(): Promise<void> {
@@ -39,7 +56,7 @@ async function boot(): Promise<void> {
       role: 'viewer',
     }
 
-    setStatus(statusEl, 'Loading…')
+    setStatus(statusEl, 'Loading…', 'loading')
     await refresh()
 
     listenBroadcast(() => {
