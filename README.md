@@ -80,7 +80,7 @@ Asset paths use `base: './'` so builds work on Twitch’s CDN path layout.
 
 ## Current iteration
 
-**Iteration 2 (death record):** Undo last death, edit note, paste a Twitch clip URL in Live Config. Panel expands Stream / Game / Run lists with clip links.
+**Iteration 3 (tags):** Optional boss / character on +1 and Last death. Panel groups those tags next to Stream / Game / Run. Overlay stays Stream + Run, with session and last death in one header.
 
 ### Quick API test (local dev auth)
 

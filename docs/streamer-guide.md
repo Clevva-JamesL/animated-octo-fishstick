@@ -23,7 +23,7 @@ You (or a mod) press **+1 Death** when you die. Viewers see the counts update on
 
 | Place | What they see |
 |-------|----------------|
-| **Video overlay** | Small HUD in the **top-right** of the player: session name, **Stream** count, **Run** count |
+| **Video overlay** | Small HUD in the **top-right** of the player: session + last death, **Stream** count, **Run** count |
 | **Panel** (only if you activate a panel slot) | Stream, Game, and Run counts plus a **Recent deaths** list |
 
 The overlay sits on top of Twitch’s player for people watching in the browser or app. It is **not** burned into your stream, **not** in VODs, and **not** visible in OBS.
@@ -77,23 +77,26 @@ You **must** start a session before anyone can record a death. Until then:
 
 While live, open **Stream Manager** in Creator Dashboard and use the extension’s live config view (**Live Controls**).
 
-You should see three numbers — **Stream**, **Game**, **Run** — a **Note** field, a large **+1 Death** button, and a **Last death** card after you record one.
+You should see three numbers — **Stream**, **Game**, **Run** — a **Note** field, optional **Tag** (None / Boss / Character + name), a large **+1 Death** button, and a **Last death** card after you record one.
 
 ### Record a death
 
-1. (Optional) Type a short note, e.g. `Malenia`, `fall`, `gank`. 500 characters max.
-2. Click **+1 Death**.
+1. (Optional) Type a short note, e.g. `phase 2`, `fall`, `gank`. 500 characters max.
+2. (Optional) Set **Tag** to **Boss** or **Character** and type a name, e.g. `Malenia` or `Samurai`. 120 characters max. Leave it at **None** to skip.
+3. Click **+1 Death**.
 
-Status should say **Death recorded**. The numbers tick up. The note field clears. **Last death** shows the note, time, and a clip field.
+Status should say **Death recorded**. The numbers tick up. The note field clears. The tag stays so you can +1 the same boss or character again. **Last death** shows the note, tag, time, and a clip field.
+
+Change the tag when you move to a different fight or character. Set it back to **None** for untagged deaths.
 
 To fix a mis-click, open **Last death** and click **Undo**. That deletes the most recent death and drops the counts.
 
-To change the note or attach a clip:
+To change the note, tag, or attach a clip:
 
-1. Edit **Note** on the Last death card, and/or paste a Twitch clip URL (`clips.twitch.tv/…` or `twitch.tv/…/clip/…`).
+1. Edit **Note** and/or **Tag** on the Last death card, and/or paste a Twitch clip URL (`clips.twitch.tv/…` or `twitch.tv/…/clip/…`).
 2. Click **Save**.
 
-Clear the clip field and **Save** to remove a clip. Viewers see clip links on the **panel**, not on the overlay.
+Clear the clip field and **Save** to remove a clip. Set Tag to **None** and **Save** to remove a tag. Viewers see tags and clip links on the **panel**. The overlay shows the last death’s tag (if any), but not clip links.
 
 Viewers on twitch.tv should see overlay counts update within a second or two. They do not need to refresh.
 
@@ -115,7 +118,7 @@ Every death is stored with the **game** (Twitch catalog pick or custom name) and
 
 - Session `Elden Ring` / `RL1`, you die 4 times this stream, and you already had 20 RL1 deaths from last week: **Stream 4**, **Game** (all Elden Ring deaths), **Run 24**.
 - You leave Game and Run blank: **Game** and **Run** show the same number as **Stream**.
-- Overlay shows **Stream** and **Run** only. **Game** is still tracked; viewers see it on the panel if you activated one.
+- Overlay shows **Stream** and **Run** only. Session name and last death share one header above them. **Game** is still tracked; viewers see it on the panel if you activated one.
 
 For **Run**, use the same spelling across streams (`RL1` and `rl1` are different). Game totals no longer depend on how you typed the title, as long as you pick it from the list.
 
@@ -168,7 +171,7 @@ Viewers only see counts and clip links. They cannot add, edit, or undo deaths fr
 
 **Overlay (top-right of the player)**
 
-- A compact label: `Game · Run` (or just the game if Run is empty).
+- A compact header: `Game · Run` (or just the game if Run is empty). When there is a death this stream, a second line in the same pill: note (or “Death”) and optional boss/character category.
 - Two chips: **Stream** and **Run**.
 - Clicks pass through to the player; viewers cannot interact with the HUD.
 - If there is no session: **Waiting for session**.
@@ -177,6 +180,8 @@ Viewers only see counts and clip links. They cannot add, edit, or undo deaths fr
 
 - Stream, Game, and Run counts.
 - Expandable lists for **Stream**, **Game**, and **Run** (up to 25 deaths each). Stream starts open.
+- Extra groups for each **Boss** / **Character** tag used on the current game, closed by default, labeled like `Boss · Malenia`.
+- Tag names on death rows in Stream / Game / Run.
 - A **Clip** link on any death that has one. Opens the Twitch clip.
 
 **Not visible**
@@ -194,7 +199,7 @@ If you want the numbers **in the video itself** (recordings, YouTube, in-person 
 2. Open **Config** → pick Game from **On this stream** / Recent / search → set Run → **Start session**.
 3. Go live.
 4. Keep **Live Controls** handy (second monitor, Stream Manager, or a mod).
-5. On each death: optional note → **+1 Death**. Mis-click: **Undo** on Last death. Clip: paste URL → **Save**.
+5. On each death: optional note + optional boss/character tag → **+1 Death**. Mis-click: **Undo** on Last death. Clip or tag fix: edit Last death → **Save**.
 6. Switching attempt names: **Update current**, don’t restart unless you want Stream back at 0.
 7. End of stream: **End session** if you want a clean Stream count next time.
 
@@ -210,6 +215,7 @@ These are not available in the current extension UI:
 - Moving the overlay (it is top-right only)
 - Showing the Game count on the overlay
 - Embedding the counter in OBS / the encoded stream
+- Fight timers
 
 ---
 

@@ -1,7 +1,7 @@
 import '../shared/styles.css'
 import { fetchExtState, type AuthContext, type ExtState } from '../shared/api'
 import { listenBroadcast, resolveAuthToken, setStatus } from '../shared/twitch'
-import { applyStateCounts, deathsFor, renderDeathList, sessionLabel } from '../shared/ui'
+import { applyStateCounts, deathsFor, renderCategoryGroups, renderDeathList, sessionLabel } from '../shared/ui'
 
 function requireEl(selector: string): HTMLElement {
   const el = document.querySelector<HTMLElement>(selector)
@@ -19,6 +19,7 @@ const runList = requireEl('#death-list-run')
 const streamCount = requireEl('#count-list-stream')
 const gameCount = requireEl('#count-list-game')
 const runCount = requireEl('#count-list-run')
+const tagGroups = requireEl('#death-groups-tags')
 
 let auth: AuthContext = { token: '' }
 
@@ -38,6 +39,7 @@ function paint(state: ExtState): void {
   paintGroup(streamList, streamCount, deathsFor(state, 'stream'), state.counts.stream)
   paintGroup(gameList, gameCount, deathsFor(state, 'game'), state.counts.game)
   paintGroup(runList, runCount, deathsFor(state, 'run'), state.counts.run)
+  renderCategoryGroups(tagGroups, state.categories ?? [])
 }
 
 async function refresh(): Promise<void> {

@@ -8,6 +8,7 @@ use App\Models\Channel;
 use App\Models\Death;
 use App\Services\GameResolver;
 use App\Services\TwitchExtensionPubSub;
+use App\Support\DeathCategory;
 use App\Support\TwitchClipUrl;
 use App\Support\TwitchContext;
 use Illuminate\Http\JsonResponse;
@@ -25,7 +26,13 @@ class DeathController extends Controller
 
         $validated = $request->validate([
             'note' => ['nullable', 'string', 'max:500'],
+            ...DeathCategory::rules(),
         ]);
+
+        [$categoryType, $categoryValue] = DeathCategory::pair(
+            $validated['category_type'] ?? null,
+            $validated['category_value'] ?? null,
+        );
 
         $channel = TwitchContext::channel($request);
         $session = TwitchContext::requireCurrentSession($channel);
@@ -36,6 +43,8 @@ class DeathController extends Controller
             'game' => $session->game,
             'run' => $session->run,
             'note' => $validated['note'] ?? null,
+            'category_type' => $categoryType,
+            'category_value' => $categoryValue,
             'died_at' => now(),
             'created_by_twitch_id' => TwitchContext::actorId($request),
         ]);
@@ -57,6 +66,7 @@ class DeathController extends Controller
             'died_at' => ['sometimes', 'date'],
             'twitch_game_id' => ['sometimes', 'nullable', 'string', 'max:32', 'regex:/^\d+$/'],
             'box_art_url' => ['sometimes', 'nullable', 'string', 'max:512'],
+            ...DeathCategory::rules(),
         ]);
 
         if ($request->exists('twitch_game_id') || $request->exists('game')) {
@@ -79,6 +89,15 @@ class DeathController extends Controller
 
         if (array_key_exists('died_at', $validated)) {
             $death->died_at = $validated['died_at'];
+        }
+
+        if ($request->exists('category_type') || $request->exists('category_value')) {
+            [$categoryType, $categoryValue] = DeathCategory::pair(
+                $validated['category_type'] ?? null,
+                $validated['category_value'] ?? null,
+            );
+            $death->category_type = $categoryType;
+            $death->category_value = $categoryValue;
         }
 
         $death->save();

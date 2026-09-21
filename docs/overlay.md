@@ -128,7 +128,7 @@ Requires a public HTTPS URL for the EBS and extension assets.
 
 - **Transparent background** — only the HUD chips are visible; the rest of the iframe is clear.
 - **Non-interactive** — `pointer-events: none` so clicks pass through to the player.
-- **Minimal UI** — stream / run counts plus optional session label; no death list. Game count is still tracked in the backend and shown on the panel. Visual tokens live in [design.md](design.md).
+- **Minimal UI** — stream / run counts plus one header pill (session, optional last death). Game count and boss/character groups stay on the panel. Visual tokens live in [design.md](design.md).
 - **Not in VOD/OBS output** — the overlay is a Twitch client layer for viewers on twitch.tv, not encoded into the stream.
 
 ## Optional follow-ups

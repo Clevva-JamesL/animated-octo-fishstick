@@ -10,5 +10,5 @@ When changing appearance, layout, colour, type, or motion of extension UI, follo
 
 - Use existing colour and spacing tokens. Do not add one-off hex, font stacks, or animation timings.
 - If a visual choice is not in that doc, add it there first, then implement.
-- Overlay stays transparent, non-interactive, top-right, Stream + Run only.
+- Overlay stays transparent, non-interactive, top-right: Stream + Run counts plus a session/last-death header.
 - Respect `prefers-reduced-motion` for any new animation.

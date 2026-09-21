@@ -1,4 +1,4 @@
-import type { Counts, Death, ExtState, StreamSession } from './api'
+import type { Counts, Death, DeathCategoryGroup, ExtState, StreamSession } from './api'
 
 export function renderCounts(counts: Counts): void {
   const stream = document.querySelector('#count-stream')
@@ -21,6 +21,23 @@ export function sessionLabel(session: StreamSession | null): string {
   return run ? `${game} · ${run}` : game
 }
 
+export function categoryLabel(type: string | null | undefined, value: string | null | undefined): string | null {
+  const name = value?.trim()
+  if (!type || !name) {
+    return null
+  }
+
+  if (type === 'character') {
+    return `Character · ${name}`
+  }
+
+  if (type === 'boss') {
+    return `Boss · ${name}`
+  }
+
+  return `${type} · ${name}`
+}
+
 export function deathsFor(
   state: ExtState,
   bucket: 'stream' | 'game' | 'run',
@@ -28,7 +45,16 @@ export function deathsFor(
   return state.deaths?.[bucket] ?? (bucket === 'stream' ? state.recent_deaths : [])
 }
 
-export function renderDeathList(listEl: HTMLElement, deaths: Death[]): void {
+export function latestStreamDeath(state: ExtState): Death | null {
+  return deathsFor(state, 'stream')[0] ?? null
+}
+
+export function renderDeathList(
+  listEl: HTMLElement,
+  deaths: Death[],
+  options: { showTag?: boolean } = {},
+): void {
+  const showTag = options.showTag !== false
   listEl.replaceChildren()
 
   if (deaths.length === 0) {
@@ -43,11 +69,22 @@ export function renderDeathList(listEl: HTMLElement, deaths: Death[]): void {
     const note = document.createElement('div')
     note.textContent = death.note?.trim() || 'Death'
 
+    item.append(note)
+
+    if (showTag) {
+      const tag = categoryLabel(death.category_type, death.category_value)
+      if (tag) {
+        const tagEl = document.createElement('div')
+        tagEl.className = 'death-tag'
+        tagEl.textContent = tag
+        item.append(tagEl)
+      }
+    }
+
     const when = document.createElement('div')
     when.className = 'when'
     when.textContent = death.died_at ? new Date(death.died_at).toLocaleTimeString() : '—'
-
-    item.append(note, when)
+    item.append(when)
 
     if (death.clip_url) {
       const clip = document.createElement('a')
@@ -60,6 +97,31 @@ export function renderDeathList(listEl: HTMLElement, deaths: Death[]): void {
     }
 
     listEl.append(item)
+  }
+}
+
+export function renderCategoryGroups(container: HTMLElement, groups: DeathCategoryGroup[]): void {
+  container.replaceChildren()
+  container.hidden = groups.length === 0
+
+  for (const group of groups) {
+    const details = document.createElement('details')
+    details.className = 'death-group'
+
+    const summary = document.createElement('summary')
+    const name = document.createElement('span')
+    name.className = 'death-group-name'
+    name.textContent = categoryLabel(group.type, group.value) ?? group.value
+    const count = document.createElement('span')
+    count.className = 'death-group-count'
+    count.textContent = String(group.count)
+    summary.append(name, count)
+
+    const list = document.createElement('ul')
+    renderDeathList(list, group.deaths, { showTag: false })
+
+    details.append(summary, list)
+    container.append(details)
   }
 }
 

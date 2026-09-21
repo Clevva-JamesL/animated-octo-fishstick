@@ -1,7 +1,12 @@
 import './overlay.css'
 import { fetchExtState, type AuthContext, type ExtState } from '../shared/api'
 import { listenBroadcast, resolveAuthToken } from '../shared/twitch'
-import { applyStateCounts, sessionLabel } from '../shared/ui'
+import {
+  applyStateCounts,
+  categoryLabel,
+  latestStreamDeath,
+  sessionLabel,
+} from '../shared/ui'
 
 function requireEl(selector: string): HTMLElement {
   const el = document.querySelector<HTMLElement>(selector)
@@ -12,7 +17,12 @@ function requireEl(selector: string): HTMLElement {
 }
 
 const overlayEl = requireEl('#overlay')
+const headlineEl = requireEl('#headline')
 const sessionLabelEl = requireEl('#session-label')
+const lastDeathEl = requireEl('#last-death')
+const lastDeathNoteEl = requireEl('#last-death-note')
+const lastDeathSepEl = requireEl('#last-death-sep')
+const lastDeathTagEl = requireEl('#last-death-tag')
 const statusEl = requireEl('#status')
 
 let auth: AuthContext = { token: '' }
@@ -40,16 +50,47 @@ function setOverlayLoading(loading: boolean): void {
   overlayEl.setAttribute('aria-busy', loading ? 'true' : 'false')
 }
 
+function paintHeadline(state: ExtState): void {
+  if (!state.session) {
+    headlineEl.hidden = true
+    sessionLabelEl.textContent = ''
+    lastDeathEl.hidden = true
+    lastDeathNoteEl.textContent = 'Death'
+    lastDeathSepEl.hidden = true
+    lastDeathTagEl.hidden = true
+    lastDeathTagEl.textContent = ''
+    return
+  }
+
+  headlineEl.hidden = false
+  sessionLabelEl.textContent = sessionLabel(state.session)
+
+  const last = latestStreamDeath(state)
+  if (!last) {
+    lastDeathEl.hidden = true
+    lastDeathNoteEl.textContent = 'Death'
+    lastDeathSepEl.hidden = true
+    lastDeathTagEl.hidden = true
+    lastDeathTagEl.textContent = ''
+    return
+  }
+
+  const tag = categoryLabel(last.category_type, last.category_value)
+  lastDeathEl.hidden = false
+  lastDeathNoteEl.textContent = last.note?.trim() || 'Death'
+  lastDeathTagEl.textContent = tag ?? ''
+  lastDeathTagEl.hidden = !tag
+  lastDeathSepEl.hidden = !tag
+}
+
 function paint(state: ExtState): void {
   applyStateCounts(state)
+  paintHeadline(state)
   setOverlayLoading(false)
 
   if (state.session) {
-    sessionLabelEl.textContent = sessionLabel(state.session)
-    sessionLabelEl.hidden = false
     clearStatus()
   } else {
-    sessionLabelEl.hidden = true
     setStatus('Waiting for session')
   }
 }

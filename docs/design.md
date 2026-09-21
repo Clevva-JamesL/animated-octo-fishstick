@@ -14,8 +14,11 @@ CSS files that implement this spec:
 
 | Surface | File |
 |---------|------|
+| Base palette (shared by every view) | `extension/src/shared/tokens.css` |
 | Overlay HUD | `extension/src/overlay/overlay.css` |
 | Panel / Config / Live Config | `extension/src/shared/styles.css` |
+
+Both stylesheets `@import` the token file, so a palette change is made once.
 
 ---
 
@@ -24,7 +27,7 @@ CSS files that implement this spec:
 | Surface | Context | Background |
 |---------|---------|------------|
 | **Overlay** | On top of the Twitch player | Fully transparent; only HUD chips are visible |
-| **Panel / Config / Live Config** | Opaque Twitch iframe | Solid `--bg` |
+| **Panel / Config / Live Config** | Opaque Twitch iframe | Solid `--bg` (outer), cards and controls sit on `--surface` (inner) |
 
 Overlay is non-interactive (`pointer-events: none`). Config and live config are fully interactive.
 
@@ -32,41 +35,88 @@ Overlay is non-interactive (`pointer-events: none`). Config and live config are 
 
 ## Colour
 
-Use these tokens. Overlay may use translucent blacks for contrast on video; opaque views use `--bg`.
+The scheme is derived from the lavender panel in the channel’s “About me” banner. The bird illustration is deliberately excluded: its olive, tan, and red hues are character artwork, not interface colours. The panel’s deep violet, lavender gradient, and white lettering define the UI; values are adjusted only where small-text contrast requires it.
+
+### Changing the palette
+
+Each base colour is declared once in `tokens.css`, as a space-separated channel triple rather than a hex value so derived tokens can add alpha with `rgb(var(--x-rgb) / a)`.
+
+| Role | Variable | Current |
+|------|----------|---------|
+| Outer background | `--bg-rgb` | `155 149 184` (`#9b95b8`) |
+| Inner background | `--surface-rgb` | `202 196 222` (`#cac4de`) |
+| Text | `--fg-rgb` | `48 42 66` (`#302a42`) |
+| Text highlight | `--highlight-rgb` | `255 255 255` (`#ffffff`) |
+| Error | `--error-rgb` | `66 9 14` (`#42090e`) |
+
+Edit one triple and every surface follows: borders, muted text, input tints, hover states, overlay pills, and the count-chip halo. Re-check contrast afterwards (see below) and update this table.
+
+### Tokens
 
 | Token | Value | Use |
 |-------|-------|-----|
-| `--bg` | `#201c2b` | Opaque page background |
-| `--fg` | `#f4f2f7` | Primary text, count values |
-| `--muted` | `#a89bb8` (opaque) / `rgba(244, 242, 247, 0.75)` (overlay) | Labels, secondary text, session name |
-| `--accent` | `#9146ff` | Twitch purple; primary actions |
-| `--error` | `#ff6b6b` | Error status |
-| `--ok` | `#6bcb77` | Success status |
-| `--danger-bg` | `rgba(255, 107, 107, 0.2)` | Danger button fill |
-| `--danger-fg` | `#ffb4b4` | Danger button text |
+| `--bg` | `#9b95b8` | Outer background: mid-lavender extrapolated from the panel gradient |
+| `--surface` | `#cac4de` | Inner background: the panel’s light lavender |
+| `--fg` | `#302a42` | Primary text, darkened from the illustrated lettering for accessibility |
+| `--fg-highlight` | `#ffffff` | White lettering and text on saturated fills |
+| `--muted` | text at 85% | Secondary text **on `--surface` only** |
+| `--accent` | `#9146ff` | Twitch purple; primary button fills |
+| `--accent-text` | `#5c16c5` | Darker Twitch purple for text (clip links) |
+| `--error` | `#42090e` | Error status |
+| `--ok` | `#082014` | Success status |
+| `--danger-bg` | error at 16% | Danger button fill |
+| `--danger-fg` | `--error` | Danger button text |
+
+`--accent` and `--accent-text` are Twitch brand purple (fill vs text). `--ok` remains a semantic status hue. Surfaces stay on the banner palette.
+
+Text is dark on light, so `--fg` (not `--fg-highlight`) is the default. Reach for `--fg-highlight` only where the fill is saturated enough that dark text fails.
+
+### Contrast rules
+
+The backgrounds are mid-tone, so text colour is constrained. Every value above clears WCAG AA (4.5:1) for small text against both `--bg` and `--surface`, with two deliberate exceptions:
+
+- `--fg` clears AA on `--bg` (4.8:1) and `--surface` (8.1:1).
+- `--muted` only clears AA on `--surface` (5.8:1); on `--bg` it is 3.8:1. Use it inside cards, chips, and dropdowns. Small secondary text sitting directly on the page (`p`, `label`, `#status`, `.meta`) uses `--fg` and takes its hierarchy from size and weight instead.
+- `--accent` is a fill, never small text. White on `--accent` is 4.6:1. For purple text use `--accent-text`, which reaches 5.2:1 on `--surface`.
+
+Before adding a colour, check it against both backgrounds rather than eyeballing it.
 
 ### Surfaces & borders (opaque views)
 
+Two derived alpha tokens carry the borders and light control fills.
+
+| Token | Value | Use |
+|-------|-------|-----|
+| `--line` | text at 22% | Chip / card / list borders |
+| `--line-strong` | text at 35% | Input, dropdown, overlay chip borders |
+| `--tint` | highlight at 55% | Input and default button fill |
+| `--tint-hover` | highlight at 35% | Hover / selected row and summary fill |
+
 | Role | Value |
 |------|-------|
-| Chip / card fill | `rgba(255, 255, 255, 0.03)` |
-| Chip / list border | `rgba(255, 255, 255, 0.08)` |
-| Input fill | `rgba(0, 0, 0, 0.25)` |
-| Input / overlay chip border | `rgba(255, 255, 255, 0.12)` |
-| Default button fill | `rgba(255, 255, 255, 0.1)` |
-| Combobox dropdown fill | `#201c2b` (`--bg`) with `rgba(255, 255, 255, 0.12)` border |
-| Combobox row hover / selected | `rgba(255, 255, 255, 0.06)` |
+| Chip / card fill | `--surface` |
+| Chip / list border | `--line` |
+| Input fill | `--tint` with `--line-strong` border |
+| Default button fill | `--tint` |
+| Combobox dropdown fill | `--surface` with `--line-strong` border |
+| Combobox row hover / selected | `--tint-hover` |
+| Combobox box-art placeholder | `--bg` |
 | Disabled | `opacity: 0.45` |
 
 ### Overlay-only fills
 
-| Role | Value |
-|------|-------|
-| Session label / status pill | `rgba(0, 0, 0, 0.55)` |
-| Count chip | `rgba(0, 0, 0, 0.6)` plus `backdrop-filter: blur(4px)` |
-| Text on video | `text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8)` (values: `0 1px 3px rgba(0, 0, 0, 0.9)`) |
+| Token | Value | Use |
+|-------|-------|-----|
+| `--pill` | inner background at 90% | Header and status pill fill |
+| `--chip` | inner background at 95% | Count chip fill, plus `backdrop-filter: blur(4px)` and a `--line-strong` border |
+| `--halo` | `0 1px 2px` highlight at 70% | `text-shadow` for labels and header text on video |
+| `--halo-strong` | `0 1px 3px` highlight at 80% | `text-shadow` for count values |
 
-Do not use white page backgrounds. Stay dark so HUD and iframe UIs match Twitch’s dark player chrome.
+Overlay fills stay near-opaque so dark HUD text keeps its contrast over bright and dark footage alike. `--muted` is safe here because it always sits on a pill, never on raw video.
+
+The HUD reads as dark text on a light lilac pill, so the halo behind text is light, not black.
+
+Keep page backgrounds on `--bg`; do not paint plain white or revert individual views to the old dark chrome.
 
 ---
 
@@ -82,9 +132,9 @@ Do not use white page backgrounds. Stay dark so HUD and iframe UIs match Twitch�
 | Meta / timestamps | `0.75rem` |
 | Count value | `1.6rem` opaque / `1.5rem` overlay, weight `700`, line-height `1.1` |
 | Count label | `0.7rem` opaque / `0.6rem` overlay, uppercase, letter-spacing `0.04em`–`0.05em` |
-| Overlay session label | `0.7rem` / line-height `1.3` |
-| Overlay status | `0.65rem` |
-| Input / button | inherit the page font; buttons `font-weight: 600` |
+| Overlay header session | `0.7rem` / line-height `1.3` |
+| Overlay header last death / status | `0.65rem` / line-height `1.3` |
+| Input / button / select | inherit the page font; buttons `font-weight: 600` |
 | Primary button | `1.1rem` |
 
 ---
@@ -104,7 +154,8 @@ Do not use white page backgrounds. Stay dark so HUD and iframe UIs match Twitch�
 | Input padding | `8px 10px` |
 | Chip radius | `8px` |
 | Button / input / overlay pill radius | `6px` |
-| Overlay HUD max width | `min(320px, 40vw)` |
+| Overlay HUD max width | `min(400px, 50vw)` |
+| Overlay header padding | `4px 10px` |
 | Combobox dropdown max height | `220px` |
 | Combobox box-art | `28×40px`, radius `4px` |
 | Combobox row padding | `8px 10px` |
@@ -112,6 +163,8 @@ Do not use white page backgrounds. Stay dark so HUD and iframe UIs match Twitch�
 | Last-death card padding | `10px` |
 | Disclosure summary padding | `8px 10px` |
 | Death-group gap | `8px` |
+| Tag row | two columns: type `110px`, name `1fr`, gap `8px` |
+| Death-row tag | `0.75rem`, `--muted` |
 
 ---
 
@@ -140,19 +193,26 @@ Do not animate the overlay into view on load (it should already be in place). Do
 
 - Stream and Run on the **overlay**. Game is still tracked in the backend and shown on panel / live config.
 - Label is uppercase muted text under a large number.
-- Overlay chips sit in a horizontal row, top-right, right-aligned with the session label.
+- Overlay chips sit in a horizontal row, top-right, right-aligned under the header.
 
-### Session label
+### Overlay header
 
-- Overlay: compact pill above the chips (`Game · Run`). Hidden when no session; status “Waiting for session” instead.
-- Panel: always visible sentence under the title.
+One pill above the count chips. Combines session identity and the most recent stream death. Not a third count chip.
+
+- Fill, padding, and radius match the overlay status pill (`--pill`, `4px 10px`, `6px`). Right-aligned text. Max width is the HUD max.
+- Line 1: `Game · Run` (or just the game). `0.7rem`, `--muted`. Ellipsis if it overflows.
+- Line 2 (optional): last death note (`0.65rem`, `--fg`, weight `600`) then ` · ` then `Boss · Name` or `Character · Name` (`0.65rem`, `--muted`). Fallback note is `Death`. Hide the separator and category when untagged. Hide the whole line when there is no stream death. One line with ellipsis.
+- No time, no `LAST` heading, no clip URL.
+- Hidden entirely when there is no session or the overlay is still loading (`hidden` on the header). Status “Waiting for session” instead.
+
+Panel session copy stays a sentence under the title (not this pill).
 
 ### Buttons
 
 | Class | Look |
 |-------|------|
 | default | Neutral fill, `--fg` text |
-| `.primary` | `--accent` fill, white text, larger padding |
+| `.primary` | `--accent` fill, `--fg-highlight` text, larger padding |
 | `.danger` | `--danger-bg` / `--danger-fg` |
 | `.is-loading` | Inline-flex, 8px gap; 12×12 spinner to the left of the label |
 
@@ -164,13 +224,13 @@ Respect `prefers-reduced-motion: reduce` — spinner stays visible as a static f
 
 ### Inputs
 
-Full width, muted label above the field, dark fill, light border.
+Full width, muted label above the field, dark fill, light border. Native `<select>` uses the same fill, border, radius, and padding as text inputs (opaque views only).
 
 ### Combobox (config Game picker)
 
 Search-select over an input. Opaque views only (not overlay).
 
-- Dropdown is a bordered list under the field, same `--bg` as the page, scrollable, `z-index: 2`.
+- Dropdown is a bordered list under the field, filled with `--surface` so it lifts off the page, scrollable, `z-index: 2`.
 - Rows are a horizontal cluster: optional box-art, then name. Hover/keyboard highlight uses combobox row hover fill.
 - Section labels (“On this stream”, “Recent”, “Search”) sit above their rows; muted, uppercase, not clickable.
 - A selected game is a compact chip above the input (art + name + clear). Clear is a small default button, `aria-label="Clear game"`.
@@ -182,24 +242,34 @@ Search-select over an input. Opaque views only (not overlay).
 
 Opaque views only. Used to edit the most recent death without leaving Live Controls.
 
-- Card fill and border match chip / list (`rgba(255, 255, 255, 0.03)` / `0.08`), radius `8px`, padding `10px`.
+- Card fill and border match chip / list (`--surface` / `--line`), radius `8px`, padding `10px`.
 - Title is an `h2`. Timestamp under it uses meta type.
-- Note and Clip URL are standard inputs. Clip placeholder is a Twitch clip URL.
+- Note, optional tag (type + name), and Clip URL. Clip placeholder is a Twitch clip URL. Tag type is `None` / `Boss` / `Character`; name is a text field, disabled when type is `None`.
 - Actions: **Save** (default button) then **Undo** (`.danger`) in `.actions`.
 - Hidden entirely when there is no last death (`hidden` on the section).
 
 ### Disclosure groups (panel)
 
-Native `<details>` / `<summary>` for Stream, Game, and Run death lists. Opaque views only (not overlay).
+Native `<details>` / `<summary>` for Stream, Game, Run, and optional tag groups. Opaque views only (not overlay).
 
 - Each group is a chip-styled card (same fill, border, radius as count chips).
 - Groups stack with `8px` gap.
 - Summary is a horizontal row: muted triangle, group name (body, weight `600`, left), muted count on the right. Padding `8px 10px`. Cursor pointer.
 - Summary hover / open uses combobox row hover fill and `control-hover`.
-- Stream starts open; Game and Run start closed.
+- Stream starts open; Game, Run, and tag groups start closed.
+- Tag groups follow Run. One group per distinct boss/character name in the current game (session fallback if the game is unset). Label is `Boss · Name` or `Character · Name`. Hide the tag block when there are no tagged deaths.
 - Summary uses a muted CSS triangle (closed: pointing right; open: pointing down). Native markers are hidden so alignment matches across browsers.
-- List rows inside reuse death-list type. Optional **Clip** link is `--accent`, `0.75rem`, no underline until hover.
+- List rows inside reuse death-list type. Optional tag line under the note is muted `0.75rem`. Optional **Clip** link is `--accent-text`, `0.75rem`, no underline until hover.
 - Respect `prefers-reduced-motion: reduce` — summary hover duration `0`.
+
+### Tag row (live config)
+
+Opaque views only. Used on **+1 Death** and **Last death**.
+
+- Horizontal pair: native select (type) + text input (name).
+- Type options: `None`, `Boss`, `Character`. Name maxlength `120`.
+- Name is disabled when type is `None`.
+- After +1, keep the tag so the next death can reuse the same boss/character; still clear the note.
 
 ### Status
 
@@ -209,14 +279,14 @@ Opaque views boot with `Waiting for Twitch authorization…` then `Loading…`, 
 
 ### Overlay loading
 
-On first load, hide the count chips and show the status pill `Loading` with spinner. After `/state` arrives: session label + chips, or `Waiting for session` with no spinner. Do not animate the HUD into view.
+On first load, hide the header and count chips and show the status pill `Loading` with spinner. After `/state` arrives: header (session, plus last death if any) + count chips, or `Waiting for session` with no spinner. Do not animate the HUD into view.
 
 ---
 
 ## Overlay rules
 
 - Transparent `html`/`body`; never paint a page background.
-- HUD only — no death list, no forms, no Twitch-branded chrome beyond the purple accent if needed.
+- HUD only — Stream / Run counts plus a session/last-death header. No death list, no forms, no Twitch-branded chrome beyond the purple accent if needed.
 - Clicks must pass through to the player.
 - Keep copy short; this sits on live video.
 
@@ -227,12 +297,13 @@ On first load, hide the count chips and show the status pill `Loading` with spin
 **Do**
 
 - Reuse the tokens and component patterns above.
-- Keep overlay contrast high enough to read on bright and dark game footage (translucent black + text shadow).
+- Keep overlay contrast high enough to read on bright and dark game footage (near-opaque `--surface` pill + light text shadow).
 - Match Twitch purple for the main call to action.
+- Derive new shades from the four base colours with alpha rather than inventing another hue.
 
 **Don’t**
 
 - Add a third count chip to the overlay without updating this doc.
-- Introduce a second font family or a light theme for extension views.
+- Introduce a second font family, or a dark variant of any extension view.
 - Use CSS animation that isn’t named in **Motion**.
 - Block the centre of the player with HUD (stay top-right unless position is added as a config option here).

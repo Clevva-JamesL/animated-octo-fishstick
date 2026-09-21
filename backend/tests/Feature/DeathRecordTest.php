@@ -135,6 +135,101 @@ class DeathRecordTest extends TestCase
             ->assertJsonPath('recent_deaths.0.note', 'second');
     }
 
+    public function test_can_tag_a_death_as_boss_or_character(): void
+    {
+        $this->beginExtSession();
+
+        $this->postJson('/api/ext/deaths', [
+            'note' => 'phase 2',
+            'category_type' => 'boss',
+            'category_value' => 'Malenia',
+        ], $this->extHeaders())
+            ->assertCreated()
+            ->assertJsonPath('death.category_type', 'boss')
+            ->assertJsonPath('death.category_value', 'Malenia');
+
+        $id = $this->postJson('/api/ext/deaths', [
+            'category_type' => 'character',
+            'category_value' => 'Samurai',
+        ], $this->extHeaders())->assertCreated()->json('death.id');
+
+        $this->patchJson('/api/ext/deaths/'.$id, [
+            'category_type' => 'boss',
+            'category_value' => 'Malenia',
+        ], $this->extHeaders())
+            ->assertOk()
+            ->assertJsonPath('death.category_type', 'boss')
+            ->assertJsonPath('death.category_value', 'Malenia');
+
+        $this->patchJson('/api/ext/deaths/'.$id, [
+            'category_type' => null,
+            'category_value' => null,
+        ], $this->extHeaders())
+            ->assertOk()
+            ->assertJsonPath('death.category_type', null)
+            ->assertJsonPath('death.category_value', null);
+    }
+
+    public function test_incomplete_or_invalid_tag_is_rejected(): void
+    {
+        $this->beginExtSession();
+
+        $this->postJson('/api/ext/deaths', [
+            'category_type' => 'boss',
+        ], $this->extHeaders())->assertUnprocessable();
+
+        $this->postJson('/api/ext/deaths', [
+            'category_value' => 'Malenia',
+        ], $this->extHeaders())->assertUnprocessable();
+
+        $this->postJson('/api/ext/deaths', [
+            'category_type' => 'weapon',
+            'category_value' => 'Rivers of Blood',
+        ], $this->extHeaders())->assertUnprocessable();
+    }
+
+    public function test_state_groups_tagged_deaths_for_the_current_game(): void
+    {
+        $this->postJson('/api/ext/sessions', [
+            'twitch_game_id' => '512953',
+            'game' => 'Elden Ring',
+            'run' => 'RL1',
+        ], $this->extHeaders())->assertCreated();
+
+        $this->postJson('/api/ext/deaths', [
+            'category_type' => 'boss',
+            'category_value' => 'Margit',
+        ], $this->extHeaders())->assertCreated();
+
+        $this->postJson('/api/ext/deaths', [
+            'category_type' => 'boss',
+            'category_value' => 'Malenia',
+        ], $this->extHeaders())->assertCreated();
+
+        $this->postJson('/api/ext/sessions', [
+            'twitch_game_id' => '512953',
+            'game' => 'Elden Ring',
+            'run' => 'RL1',
+        ], $this->extHeaders())->assertCreated();
+
+        $this->postJson('/api/ext/deaths', [
+            'note' => 'again',
+            'category_type' => 'boss',
+            'category_value' => 'Malenia',
+        ], $this->extHeaders())->assertCreated();
+
+        $this->getJson('/api/ext/state', $this->extHeaders())
+            ->assertOk()
+            ->assertJsonPath('counts.stream', 1)
+            ->assertJsonPath('counts.game', 3)
+            ->assertJsonCount(2, 'categories')
+            ->assertJsonPath('categories.0.type', 'boss')
+            ->assertJsonPath('categories.0.value', 'Malenia')
+            ->assertJsonPath('categories.0.count', 2)
+            ->assertJsonPath('categories.1.value', 'Margit')
+            ->assertJsonPath('categories.1.count', 1);
+    }
+
     private function beginExtSession(string $channel = '12345'): void
     {
         $this->postJson('/api/ext/sessions', [

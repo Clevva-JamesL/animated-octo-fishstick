@@ -27,11 +27,25 @@
       </section>
 
       <div class="stack">
-        <label>
-          Note (optional)
-          <input id="note" type="text" maxlength="500" placeholder="Boss / cause of death" />
-        </label>
-        <button type="button" id="plus-one" class="primary" disabled>
+          <label>
+            Note (optional)
+            <input id="note" type="text" maxlength="500" placeholder="Cause of death" />
+          </label>
+          <div class="tag-row">
+            <label>
+              Tag
+              <select id="tag-type">
+                <option value="">None</option>
+                <option value="boss">Boss</option>
+                <option value="character">Character</option>
+              </select>
+            </label>
+            <label>
+              Name
+              <input id="tag-value" type="text" maxlength="120" placeholder="Malenia" disabled />
+            </label>
+          </div>
+          <button type="button" id="plus-one" class="primary" disabled>
           <span class="btn-spinner" aria-hidden="true"></span>
           +1 Death
         </button>
@@ -45,6 +59,20 @@
             Note
             <input id="last-note" type="text" maxlength="500" />
           </label>
+          <div class="tag-row">
+            <label>
+              Tag
+              <select id="last-tag-type">
+                <option value="">None</option>
+                <option value="boss">Boss</option>
+                <option value="character">Character</option>
+              </select>
+            </label>
+            <label>
+              Name
+              <input id="last-tag-value" type="text" maxlength="120" placeholder="Malenia" disabled />
+            </label>
+          </div>
           <label>
             Clip URL
             <input

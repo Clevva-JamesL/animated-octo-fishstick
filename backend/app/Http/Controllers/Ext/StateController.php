@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Ext;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\DeathCategoryGroupResource;
 use App\Http\Resources\DeathResource;
 use App\Http\Resources\GameResource;
 use App\Http\Resources\StreamSessionResource;
 use App\Models\Channel;
+use App\Models\Death;
 use App\Models\StreamSession;
 use App\Support\TwitchContext;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,6 +44,9 @@ class StateController extends Controller
                 'game' => DeathResource::collection($this->listedDeaths($channel, $session, 'game')),
                 'run' => DeathResource::collection($this->listedDeaths($channel, $session, 'run')),
             ],
+            'categories' => DeathCategoryGroupResource::collection(
+                $this->categoryGroups($channel, $session),
+            ),
         ]);
     }
 
@@ -64,5 +70,57 @@ class StateController extends Controller
                 : $query->where('stream_session_id', $session->id)->get(),
             default => $query->where('stream_session_id', $session->id)->get(),
         };
+    }
+
+    /**
+     * @return list<array{type:string,value:string,count:int,deaths:Collection<int, \App\Models\Death>}>
+     */
+    private function categoryGroups(Channel $channel, ?StreamSession $session): array
+    {
+        if ($session === null) {
+            return [];
+        }
+
+        $summaries = $this->taggedDeathsQuery($channel, $session)
+            ->select('category_type', 'category_value')
+            ->selectRaw('count(*) as death_count')
+            ->selectRaw('max(died_at) as last_died_at')
+            ->groupBy('category_type', 'category_value')
+            ->orderByDesc('last_died_at')
+            ->limit(15)
+            ->get();
+
+        return $summaries->map(function ($row) use ($channel, $session): array {
+            $deaths = $this->taggedDeathsQuery($channel, $session)
+                ->where('category_type', $row->category_type)
+                ->where('category_value', $row->category_value)
+                ->latest('died_at')
+                ->limit(25)
+                ->get();
+
+            return [
+                'type' => (string) $row->category_type,
+                'value' => (string) $row->category_value,
+                'count' => (int) $row->death_count,
+                'deaths' => $deaths,
+            ];
+        })->all();
+    }
+
+    /**
+     * @return Builder<\App\Models\Death>
+     */
+    private function taggedDeathsQuery(Channel $channel, StreamSession $session): Builder
+    {
+        $query = Death::query()
+            ->where('channel_id', $channel->id)
+            ->whereNotNull('category_type')
+            ->whereNotNull('category_value');
+
+        if ($session->game_id) {
+            return $query->where('game_id', $session->game_id);
+        }
+
+        return $query->where('stream_session_id', $session->id);
     }
 }

@@ -1,0 +1,34 @@
+/*
+ * Base palette. Edit the four *-rgb triples below to restyle every surface;
+ * everything else in this file is derived from them.
+ * Channel triples (not hex) so tokens can add alpha via rgb(... / a).
+ * Mirror any change in docs/design.md.
+ */
+:root {
+  color-scheme: light;
+
+  --bg-rgb: 155 149 184;
+  --surface-rgb: 202 196 222;
+  --fg-rgb: 48 42 66;
+  --highlight-rgb: 255 255 255;
+  --error-rgb: 66 9 14;
+
+  --bg: rgb(var(--bg-rgb));
+  --surface: rgb(var(--surface-rgb));
+  --fg: rgb(var(--fg-rgb));
+  --fg-highlight: rgb(var(--highlight-rgb));
+  --muted: rgb(var(--fg-rgb) / 0.85);
+  --line: rgb(var(--fg-rgb) / 0.22);
+  --line-strong: rgb(var(--fg-rgb) / 0.35);
+  --tint: rgb(var(--highlight-rgb) / 0.55);
+  --tint-hover: rgb(var(--highlight-rgb) / 0.35);
+
+  --accent: #9146ff;
+  --accent-text: #5c16c5;
+  --error: rgb(var(--error-rgb));
+  --ok: #082014;
+  --danger-bg: rgb(var(--error-rgb) / 0.16);
+  --danger-fg: rgb(var(--error-rgb));
+
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}

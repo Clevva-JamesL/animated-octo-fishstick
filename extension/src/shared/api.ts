@@ -37,6 +37,13 @@ export type Death = {
   category_value: string | null
 }
 
+export type DeathCategoryGroup = {
+  type: 'boss' | 'character' | string
+  value: string
+  count: number
+  deaths: Death[]
+}
+
 export type ExtState = {
   ok: boolean
   channel: {
@@ -55,6 +62,7 @@ export type ExtState = {
     game: Death[]
     run: Death[]
   }
+  categories: DeathCategoryGroup[]
 }
 
 type ApiOptions = {
@@ -158,9 +166,15 @@ export async function endSession(
   return apiFetch('/api/ext/sessions/current/end', { ...auth, method: 'POST' })
 }
 
+export type DeathPayload = {
+  note?: string | null
+  category_type?: 'boss' | 'character' | null
+  category_value?: string | null
+}
+
 export async function createDeath(
   auth: AuthContext,
-  payload: { note?: string } = {},
+  payload: DeathPayload = {},
 ): Promise<{ death: Death; counts: Counts }> {
   return apiFetch('/api/ext/deaths', { ...auth, method: 'POST', body: payload })
 }
@@ -168,7 +182,7 @@ export async function createDeath(
 export async function updateDeath(
   auth: AuthContext,
   deathId: number,
-  payload: { note?: string | null },
+  payload: DeathPayload,
 ): Promise<{ death: Death; counts: Counts }> {
   return apiFetch(`/api/ext/deaths/${deathId}`, { ...auth, method: 'PATCH', body: payload })
 }

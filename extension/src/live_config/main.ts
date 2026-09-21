@@ -8,6 +8,7 @@ import {
   updateDeath,
   type AuthContext,
   type Death,
+  type DeathPayload,
   type ExtState,
 } from '../shared/api'
 import { listenBroadcast, resolveAuthToken, setStatus } from '../shared/twitch'
@@ -23,10 +24,14 @@ function requireEl<T extends HTMLElement>(selector: string): T {
 
 const statusEl = requireEl<HTMLElement>('#status')
 const noteInput = requireEl<HTMLInputElement>('#note')
+const tagType = requireEl<HTMLSelectElement>('#tag-type')
+const tagValue = requireEl<HTMLInputElement>('#tag-value')
 const plusOneBtn = requireEl<HTMLButtonElement>('#plus-one')
 const lastCard = requireEl<HTMLElement>('#last-death-card')
 const lastWhen = requireEl<HTMLElement>('#last-death-when')
 const lastNote = requireEl<HTMLInputElement>('#last-note')
+const lastTagType = requireEl<HTMLSelectElement>('#last-tag-type')
+const lastTagValue = requireEl<HTMLInputElement>('#last-tag-value')
 const lastClip = requireEl<HTMLInputElement>('#last-clip')
 const saveLastBtn = requireEl<HTMLButtonElement>('#save-last')
 const undoLastBtn = requireEl<HTMLButtonElement>('#undo-last')
@@ -38,6 +43,24 @@ let latest: Death | null = null
 let lastPaintedId: number | null = null
 let dirty = false
 let mutating = false
+
+function readTag(typeEl: HTMLSelectElement, valueEl: HTMLInputElement): DeathPayload {
+  const type = typeEl.value === 'boss' || typeEl.value === 'character' ? typeEl.value : null
+  const value = valueEl.value.trim() || null
+
+  return {
+    category_type: type,
+    category_value: value,
+  }
+}
+
+function setTagEnabled(typeEl: HTMLSelectElement, valueEl: HTMLInputElement, clearWhenOff: boolean): void {
+  const enabled = typeEl.value === 'boss' || typeEl.value === 'character'
+  valueEl.disabled = !enabled
+  if (!enabled && clearWhenOff) {
+    valueEl.value = ''
+  }
+}
 
 function paintLastDeath(state: ExtState): void {
   const next = deathsFor(state, 'stream')[0] ?? null
@@ -65,6 +88,10 @@ function paintLastDeath(state: ExtState): void {
   }
 
   lastNote.value = next.note ?? ''
+  lastTagType.value =
+    next.category_type === 'boss' || next.category_type === 'character' ? next.category_type : ''
+  lastTagValue.value = next.category_value ?? ''
+  setTagEnabled(lastTagType, lastTagValue, false)
   lastClip.value = next.clip_url ?? ''
   lastPaintedId = next.id
   dirty = false
@@ -112,8 +139,19 @@ async function boot(): Promise<void> {
 lastNote.addEventListener('input', () => {
   dirty = true
 })
+lastTagType.addEventListener('change', () => {
+  dirty = true
+  setTagEnabled(lastTagType, lastTagValue, true)
+})
+lastTagValue.addEventListener('input', () => {
+  dirty = true
+})
 lastClip.addEventListener('input', () => {
   dirty = true
+})
+
+tagType.addEventListener('change', () => {
+  setTagEnabled(tagType, tagValue, true)
 })
 
 plusOneBtn.addEventListener('click', () => {
@@ -127,7 +165,10 @@ plusOneBtn.addEventListener('click', () => {
     undoLastBtn.disabled = true
     try {
       const note = noteInput.value.trim()
-      await createDeath(auth, note ? { note } : {})
+      await createDeath(auth, {
+        ...(note ? { note } : {}),
+        ...readTag(tagType, tagValue),
+      })
       noteInput.value = ''
       dirty = false
       await refresh()
@@ -161,7 +202,10 @@ saveLastBtn.addEventListener('click', () => {
     try {
       const note = lastNote.value.trim() || null
       const clip = lastClip.value.trim()
-      await updateDeath(auth, deathId, { note })
+      await updateDeath(auth, deathId, {
+        note,
+        ...readTag(lastTagType, lastTagValue),
+      })
       if (clip === '') {
         if (latest.clip_url) {
           await detachClip(auth, deathId)
