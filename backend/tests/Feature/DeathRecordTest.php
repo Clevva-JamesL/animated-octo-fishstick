@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Death;
 use App\Models\Game;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class DeathRecordTest extends TestCase
@@ -135,6 +136,32 @@ class DeathRecordTest extends TestCase
             ->assertJsonPath('recent_deaths.0.note', 'second');
     }
 
+    public function test_run_count_and_list_ignore_letter_case(): void
+    {
+        $this->postJson('/api/ext/sessions', [
+            'twitch_game_id' => '512953',
+            'game' => 'Elden Ring',
+            'run' => 'RL1',
+        ], $this->extHeaders())->assertCreated();
+
+        $this->postJson('/api/ext/deaths', ['note' => 'first'], $this->extHeaders())->assertCreated();
+
+        $this->postJson('/api/ext/sessions', [
+            'twitch_game_id' => '512953',
+            'game' => 'Elden Ring',
+            'run' => 'rl1',
+        ], $this->extHeaders())->assertCreated();
+
+        $this->postJson('/api/ext/deaths', ['note' => 'second'], $this->extHeaders())->assertCreated();
+
+        $this->getJson('/api/ext/state', $this->extHeaders())
+            ->assertOk()
+            ->assertJsonPath('counts.stream', 1)
+            ->assertJsonPath('counts.run', 2)
+            ->assertJsonCount(2, 'deaths.run')
+            ->assertJsonPath('session.run', 'rl1');
+    }
+
     public function test_can_tag_a_death_as_boss_or_character(): void
     {
         $this->beginExtSession();
@@ -168,6 +195,39 @@ class DeathRecordTest extends TestCase
             ->assertOk()
             ->assertJsonPath('death.category_type', null)
             ->assertJsonPath('death.category_value', null);
+    }
+
+    public function test_pubsub_broadcast_includes_death_category(): void
+    {
+        Http::fake([
+            'https://api.twitch.tv/helix/extensions/pubsub' => Http::response(status: 204),
+        ]);
+
+        config([
+            'twitch.extension_client_id' => 'test-client',
+            'twitch.extension_secret' => base64_encode(str_repeat('s', 32)),
+        ]);
+
+        $this->beginExtSession();
+
+        $this->postJson('/api/ext/deaths', [
+            'note' => 'phase 2',
+            'category_type' => 'boss',
+            'category_value' => 'Malenia',
+        ], $this->extHeaders())->assertCreated();
+
+        Http::assertSent(function ($request): bool {
+            if ($request->url() !== 'https://api.twitch.tv/helix/extensions/pubsub') {
+                return false;
+            }
+
+            $message = json_decode((string) $request['message'], true);
+
+            return ($message['event'] ?? null) === 'death.created'
+                && ($message['death']['note'] ?? null) === 'phase 2'
+                && ($message['death']['category_type'] ?? null) === 'boss'
+                && ($message['death']['category_value'] ?? null) === 'Malenia';
+        });
     }
 
     public function test_incomplete_or_invalid_tag_is_rejected(): void

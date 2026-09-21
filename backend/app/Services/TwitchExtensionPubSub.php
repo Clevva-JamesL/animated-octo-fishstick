@@ -40,6 +40,8 @@ class TwitchExtensionPubSub
                 'note' => $death->note,
                 'died_at' => $death->died_at?->toIso8601String(),
                 'clip_url' => $death->clip_url,
+                'category_type' => $death->category_type,
+                'category_value' => $death->category_value,
             ] : null,
         ];
 

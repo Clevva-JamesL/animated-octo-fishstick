@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -42,5 +43,15 @@ class Death extends Model
     public function catalogGame(): BelongsTo
     {
         return $this->belongsTo(Game::class, 'game_id');
+    }
+
+    /**
+     * Match a run name without regard to letter case (`RL1` = `rl1`).
+     *
+     * @param  Builder<Death>  $query
+     */
+    public function scopeForRun(Builder $query, string $run): void
+    {
+        $query->whereRaw('lower(run) = lower(?)', [$run]);
     }
 }

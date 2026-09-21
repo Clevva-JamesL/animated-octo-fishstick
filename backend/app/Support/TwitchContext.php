@@ -103,7 +103,7 @@ class TwitchContext
             ? Death::query()
                 ->where('channel_id', $channel->id)
                 ->where('game_id', $session->game_id)
-                ->where('run', $session->run)
+                ->forRun($session->run)
                 ->count()
             : $stream;
 

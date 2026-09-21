@@ -66,7 +66,7 @@ class StateController extends Controller
                 ? $query->where('game_id', $session->game_id)->get()
                 : $query->where('stream_session_id', $session->id)->get(),
             'run' => ($session->game_id && $session->run)
-                ? $query->where('game_id', $session->game_id)->where('run', $session->run)->get()
+                ? $query->where('game_id', $session->game_id)->forRun($session->run)->get()
                 : $query->where('stream_session_id', $session->id)->get(),
             default => $query->where('stream_session_id', $session->id)->get(),
         };

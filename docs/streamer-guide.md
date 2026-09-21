@@ -120,7 +120,7 @@ Every death is stored with the **game** (Twitch catalog pick or custom name) and
 - You leave Game and Run blank: **Game** and **Run** show the same number as **Stream**.
 - Overlay shows **Stream** and **Run** only. Session name and last death share one header above them. **Game** is still tracked; viewers see it on the panel if you activated one.
 
-For **Run**, use the same spelling across streams (`RL1` and `rl1` are different). Game totals no longer depend on how you typed the title, as long as you pick it from the list.
+For **Run**, letter case does not matter (`RL1` and `rl1` are the same). Extra spaces or punctuation still split the total (`RL1` and `RL 1` are different). Game totals no longer depend on how you typed the title, as long as you pick it from the list.
 
 ---
 
@@ -227,7 +227,7 @@ These are not available in the current extension UI:
 | **+1 Death** is disabled / Live Controls says **No active session** | Same — Config → **Start session**. |
 | Overlay never appears on the player | Confirm the extension is **Activated** in an **Overlay** slot, then refresh the channel page as a viewer. |
 | Counts don’t move for viewers after +1 | Wait a moment; they update over Twitch’s broadcast channel. If you just started the session, make sure you used **+1 Death**, not only **Update current**. |
-| Game or Run looks “wrong” after a change | Game totals follow the **selected catalog game**, Run totals follow the **run text**. **Update current** only when you intend to change the bucket. For Run, keep the same spelling as previous streams. |
+| Game or Run looks “wrong” after a change | Game totals follow the **selected catalog game**, Run totals follow the **run text** (case-insensitive). **Update current** only when you intend to change the bucket. For Run, keep the same spelling as previous streams (`RL1` vs `RL 1`). |
 | Overlay is missing from your OBS preview | Expected. Watch your channel on twitch.tv (or a second account / incognito) to see what viewers see. |
 | Config stuck on **Waiting for Twitch authorization…** | Open it from Twitch’s **Configure** button, not as a random browser tab. |
 
